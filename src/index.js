@@ -12,9 +12,6 @@ import tools from './common/Tools';
         
     });
 
-    tools.hook(document,'write',function(){
-        alert(111);
-    });
 
     
     
