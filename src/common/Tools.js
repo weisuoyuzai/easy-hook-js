@@ -20,52 +20,8 @@ const Tools={
         }
     },
 
-    // hook(objectName,funcName,newfunc,useorigin=false){
-    //     typeof newfunc=='function'?newfunc:()=>{};
-    //     let _class=this.getClassName(objectName).prototype;        
-    //     let originFunc=_class[funcName];            //拷贝原始方法
-    //     if(typeof _class=='object'){                //判断是否对象
-    //         let _method=[];                         //保存所有对象的方法名称
-    //         for(let i in _class){                     
-    //             _method.push(i);
-    //         }
-    //         if(_method.indexOf(funcName)==-1){
-    //             throw '无此函数'
-    //         }
-    //         if(!window._originMethod){              //原始方法保存至window._originMethod中
-    //             window._originMethod=new Object();
-    //         }
 
-    //         let json={
-    //             funcName:originFunc
-    //         }
-
-    //         if(!window._originMethod[_class.constructor.name]){
-    //             window._originMethod[_class.constructor.name]=new Object();
-    //         }
-
-    //         window._originMethod[_class.constructor.name][funcName]=originFunc;
-    //         _class[funcName]=function(){
-    //             newfunc();
-    //             if(useorigin){                              //自定义方法
-    //                 originFunc.apply(this,arguments);       //调用原始方法
-    //             }
-    //         };
-    //         return Promise.resolve('hook success');
-    //     }else{
-    //         throw `${objectName} not a object`;
-    //     }
-        
-    // },
-
-    // unhook(objectName,funcName){
-    //     let _class=this.getClassName(objectName).prototype;
-    //     let originFunc=window._originMethod[_class.constructor.name][funcName];
-    //     _class[funcName]=originFunc;
-    // }
-
-
-    hook(parent,funcName,newFunc,useorigin=false){
+    hook1(parent,funcName,newFunc,useorigin=false){
         typeof newFunc=='function'?newFunc:function(){};
         let name=this.getClassName(parent);
         let originFunc=parent[funcName];
@@ -100,11 +56,91 @@ const Tools={
         })
     },
 
-    unhook(parent,funcName){
+    unhook2(parent,funcName){
         let name=this.getClassName(parent);
         let originFunc=window._originMethod[name][funcName];
         parent[funcName]=function(){
             originFunc.apply(this,arguments);
+        }
+    },
+
+    getFuncName(obj){
+        let a=String(obj);
+        let b=a.match(/function (.*)\(\)/);
+        if(b){
+            return b[1];
+        }else{
+            throw new Error('找不到对象');
+        }
+        
+    },
+
+    hook2(parent,funcName,newFunc,useorigin=false){
+        let name=this.getFuncName(parent);
+        let _origin=window[name].prototype[funcName];
+        if(_origin){
+            if(!window._originMethod2){              //原始方法保存至window._originMethod中
+                window._originMethod2=new Object();
+            }
+            if(!window._originMethod2[name]){
+                window._originMethod2[name]=new Object();
+            }
+            window._originMethod2[name][funcName]=_origin;
+            parent.prototype[funcName]=function(){
+                newFunc(_origin);
+                useorigin&&_origin.apply(this,arguments); 
+            }
+            return window._originMethod2;
+        }else{
+            throw new Error(`${name}中无${funcName}函数`);
+        }
+        
+    },
+
+    unhook2(parent,funcName){
+        let name=this.getFuncName(parent);
+        let originFunc=window._originMethod2[name][funcName];
+        parent.prototype[funcName]=function(){
+            originFunc.apply(this,arguments);
+        }
+    },
+
+    hook(parent,funcName,newFunc,useorigin=false){
+        let a=String(parent);
+        let b=/\[object (.*)\]/.test(a);
+        if(b){
+            this.hook1.apply(this,arguments);
+        }else{
+            this.hook2.apply(this,arguments);
+        }
+    },
+
+    unhook(parent,funcName){
+        let a=String(parent);
+        let b=/\[object (.*)\]/.test(a);
+        if(b){
+            this.unhook1.apply(this,arguments);
+        }else{
+            this.unhook2.apply(this,arguments);
+        }
+    },
+
+    restore(){
+        for(let k in window._originMethod){
+            console.log(k);
+            for(let i in window._originMethod[k]){
+                window[k].prototype[i]=function(){
+                    window._originMethod[k][i].apply(this,arguments);
+                }
+            }
+        }
+        for(let k in window._originMethod2){
+            for(let i in window._originMethod2[k]){
+                console.log(window[k]);
+                window[k].prototype[i]=function(){
+                    window._originMethod2[k][i].apply(this,arguments);
+                }
+            }
         }
     }
 }

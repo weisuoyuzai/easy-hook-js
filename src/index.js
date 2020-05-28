@@ -1,18 +1,28 @@
-import Console from './common/Console';
+// import Console from './common/Console';
 import tools from './common/Tools';
 
 (function(window){
-    Console.init();
+    // let v=document.createElement('video');
+    // v.src='https://www.w3school.com.cn/i/movie.ogg';
+    // v.controls=true;
+    // document.body.append(v);
+    // Console.init();
+    window.tools=tools;
+    // tools.hook(window.localStorage,'setItem',function(){
+    //     console.log(2222);
+    // },true);
     
-    tools.hook(window.localStorage,'setItem',function(){
-        
-    });
-    
-    tools.hook(window,'open',function(){
-        
-    });
+    // tools.hook(window,'open',function(){
+    //     alert(1);
+    // });
+
+    // tools.hook(HTMLVideoElement,'requestPictureInPicture',function(){
+    //     console.log(11111);
+    // },true);
 
 
     
     
 })(window);
+
+export default tools;
